@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Color Crush 🍬</h2>
+
+<h3>Level: <span id="level">1</span></h3>
+<h3>Target: <span id="targetColor">RED</span></h3>
+
+<p>Score: <span id="score">0</span></p>
+<p>Goal: <span id="goal">5</span></p>
+<p>Lives: <span id="lives">3</span></p>
+<p>Combo: <span id="combo">0</span></p>
+
+<canvas id="gameCanvas" width="400" height="300" style="border:2px solid black;"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let score = 0;
+let level = 1;
+let goal = 5;
+let lives = 3;
+let combo = 0;
+let lastClick = 0;
+
+const maxLevel = 100;
+const colors = ["red", "blue", "green", "purple", "orange"];
+let target = "red";
+
+let balls = [];
+let explosions = [];
+
+const correctSound = new Audio("https://www.soundjay.com/button/sounds/button-3.mp3");
+const wrongSound = new Audio("https://www.soundjay.com/button/sounds/button-10.mp3");
+
+function createBalls() {
+  balls = [];
+  let count = Math.min(3 + level, 15);
+
+  for (let i = 0; i < count; i++) {
+    balls.push({
+      x: Math.random() * 350,
+      y: Math.random() * 250,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+function drawBalls() {
+  balls.forEach(ball => {
+    ctx.beginPath();
+    ctx.fillStyle = ball.color;
+    ctx.arc(ball.x, ball.y, 15, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawExplosions() {
+  explosions.forEach((e, i) => {
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+    ctx.strokeStyle = "yellow";
+    ctx.stroke();
+    e.r += 2;
+    if (e.r > 20) explosions.splice(i,1);
+  });
+}
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  balls.forEach(ball => {
+    const dx = mx - ball.x;
+    const dy = my - ball.y;
+
+    if (Math.sqrt(dx*dx + dy*dy) < 15) {
+
+      let now = Date.now();
+      combo = (now - lastClick < 1000) ? combo + 1 : 1;
+      lastClick = now;
+
+      if (ball.color === target) {
+        score += combo;
+        explosions.push({x: ball.x, y: ball.y, r:5});
+        correctSound.play();
+      } else {
+        score--;
+        lives--;
+        combo = 0;
+        wrongSound.play();
+      }
+
+      checkProgress();
+      updateUI();
+      newRound();
+    }
+  });
+});
+
+function checkProgress() {
+  if (score >= goal) {
+    level++;
+    score = 0;
+    goal += 5;
+
+    if (level > maxLevel) {
+      alert("🎉 YOU COMPLETED ALL 100 LEVELS!");
+      location.reload();
+    }
+  }
+
+  if (lives <= 0) {
+    alert("💥 GAME OVER!");
+    location.reload();
+  }
+}
+
+function newRound() {
+  target = colors[Math.floor(Math.random() * colors.length)];
+  createBalls();
+}
+
+function updateUI() {
+  document.getElementById("level").innerText = level;
+  document.getElementById("score").innerText = score;
+  document.getElementById("goal").innerText = goal;
+  document.getElementById("lives").innerText = lives;
+  document.getElementById("combo").innerText = combo;
+  document.getElementById("targetColor").innerText = target.toUpperCase();
+}
+
+function gameLoop() {
+  ctx.clearRect(0,0,400,300);
+  drawBalls();
+  drawExplosions();
+  requestAnimationFrame(gameLoop);
+}
+
+createBalls();
+newRound();
+updateUI();
+gameLoop();
+</script>
+
+</body>
+</html>
