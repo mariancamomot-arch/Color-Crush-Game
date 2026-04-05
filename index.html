@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Easy Nature Match</title>
+<title>Nature Match (Click to Reveal)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -26,16 +26,28 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  background: #4caf50;
+  color: white;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🌿 Easy Nature Match</h2>
+<h2>🌿 Nature Match</h2>
 
 <p>Lives: <span id="lives">❤️❤️❤️❤️❤️❤️❤️</span></p>
 <p>Matches: <span id="count">0</span>/12</p>
+
+<button onclick="resetTiles()">🔄 Reset Tiles</button>
 
 <div class="grid" id="grid"></div>
 
@@ -44,6 +56,7 @@ const items=["🌊","🌳","🌸","🍀","🌼","🌵"];
 let grid=[],revealed=[],selected=[];
 let lives=7,count=0;
 
+/* CREATE GRID */
 function createGrid(){
   const g=document.getElementById("grid");
   g.innerHTML="";
@@ -60,24 +73,12 @@ function createGrid(){
 
     g.appendChild(cell);
   }
-
-  preview();
 }
 
-function preview(){
-  const cells=document.querySelectorAll(".cell");
-
-  cells.forEach((cell,i)=>{
-    cell.innerText=grid[i];
-  });
-
-  setTimeout(()=>{
-    cells.forEach(cell=>cell.innerText="⬜");
-  },3000);
-}
-
+/* CLICK TILE */
 function clickCell(i){
   const cells=document.querySelectorAll(".cell");
+
   if(revealed[i]) return;
 
   revealed[i]=true;
@@ -89,19 +90,22 @@ function clickCell(i){
   }
 }
 
+/* CHECK MATCH */
 function check(){
   const [a,b,c]=selected;
 
   if(grid[a]===grid[b] && grid[a]===grid[c]){
     count++;
     document.getElementById("count").innerText=count;
+
+    // keep matched tiles open
+    selected=[];
   } else {
     lives--;
     document.getElementById("lives").innerText="❤️".repeat(lives);
-  }
 
-  /* ⏳ SLOWER RESET (2 seconds) */
-  setTimeout(reset,2000);
+    // keep tiles open (no auto reset)
+  }
 
   if(lives<=0){
     alert("Game Over");
@@ -114,15 +118,19 @@ function check(){
   }
 }
 
-function reset(){
+/* RESET BUTTON */
+function resetTiles(){
   const cells=document.querySelectorAll(".cell");
+
   selected.forEach(i=>{
     revealed[i]=false;
     cells[i].innerText="⬜";
   });
+
   selected=[];
 }
 
+/* START GAME */
 createGrid();
 </script>
 
