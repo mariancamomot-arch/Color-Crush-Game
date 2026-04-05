@@ -1,91 +1,129 @@
 <!DOCTYPE html>
 <html>
-<body style="text-align:center;font-family:Arial;">
+<head>
+<title>Easy Nature Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<h1>Color Match Game 🎮</h1>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #a8e6cf;
+}
 
-<p><b>HOW TO PLAY:</b> Click the ball that matches the color below 👇</p>
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 10px;
+}
 
-<h2 id="targetText">RED</h2>
+.cell {
+  aspect-ratio: 1;
+  font-size: 26px;
+  background: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
 
-<p>Score: <span id="score">0</span> | Lives: <span id="lives">3</span></p>
+<body>
 
-<canvas id="gameCanvas" width="400" height="300" style="border:2px solid black;"></canvas>
+<h2>🌿 Easy Nature Match</h2>
+
+<p>Lives: <span id="lives">❤️❤️❤️❤️❤️❤️❤️</span></p>
+<p>Matches: <span id="count">0</span>/12</p>
+
+<div class="grid" id="grid"></div>
 
 <script>
-let score = 0;
-let lives = 3;
+const items=["🌊","🌳","🌸","🍀","🌼","🌵"];
+let grid=[],revealed=[],selected=[];
+let lives=7,count=0;
 
-const colors = ["red","blue","green"];
-let target = "red";
-let balls = [];
+function createGrid(){
+  const g=document.getElementById("grid");
+  g.innerHTML="";
+  grid=[]; revealed=[]; selected=[];
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+  for(let i=0;i<25;i++){
+    grid.push(items[Math.floor(Math.random()*items.length)]);
+    revealed.push(false);
 
-function createBalls() {
-  balls = [];
-  for (let i = 0; i < 4; i++) { // fewer balls (easier)
-    balls.push({
-      x: Math.random()*350,
-      y: Math.random()*250,
-      color: colors[Math.floor(Math.random()*colors.length)]
-    });
+    let cell=document.createElement("div");
+    cell.className="cell";
+    cell.innerText="⬜";
+    cell.onclick=()=>clickCell(i);
+
+    g.appendChild(cell);
+  }
+
+  preview();
+}
+
+function preview(){
+  const cells=document.querySelectorAll(".cell");
+
+  cells.forEach((cell,i)=>{
+    cell.innerText=grid[i];
+  });
+
+  setTimeout(()=>{
+    cells.forEach(cell=>cell.innerText="⬜");
+  },3000);
+}
+
+function clickCell(i){
+  const cells=document.querySelectorAll(".cell");
+  if(revealed[i]) return;
+
+  revealed[i]=true;
+  cells[i].innerText=grid[i];
+  selected.push(i);
+
+  if(selected.length===3){
+    check();
   }
 }
 
-function drawBalls() {
-  balls.forEach(b => {
-    ctx.beginPath();
-    ctx.fillStyle = b.color;
-    ctx.arc(b.x, b.y, 20, 0, Math.PI*2);
-    ctx.fill();
+function check(){
+  const [a,b,c]=selected;
+
+  if(grid[a]===grid[b] && grid[a]===grid[c]){
+    count++;
+    document.getElementById("count").innerText=count;
+  } else {
+    lives--;
+    document.getElementById("lives").innerText="❤️".repeat(lives);
+  }
+
+  /* ⏳ SLOWER RESET (2 seconds) */
+  setTimeout(reset,2000);
+
+  if(lives<=0){
+    alert("Game Over");
+    location.reload();
+  }
+
+  if(count>=12){
+    alert("You Win!");
+    location.reload();
+  }
+}
+
+function reset(){
+  const cells=document.querySelectorAll(".cell");
+  selected.forEach(i=>{
+    revealed[i]=false;
+    cells[i].innerText="⬜";
   });
+  selected=[];
 }
 
-canvas.addEventListener("click", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-
-  balls.forEach(b => {
-    let dx = mx - b.x;
-    let dy = my - b.y;
-
-    if (Math.sqrt(dx*dx+dy*dy) < 20) {
-
-      if (b.color === target) {
-        score++;
-      } else {
-        lives--;
-      }
-
-      if (lives <= 0) {
-        alert("Game Over!");
-        location.reload();
-      }
-
-      newRound();
-    }
-  });
-});
-
-function newRound() {
-  target = colors[Math.floor(Math.random()*colors.length)];
-  document.getElementById("targetText").innerText = target.toUpperCase();
-  document.getElementById("score").innerText = score;
-  document.getElementById("lives").innerText = lives;
-  createBalls();
-}
-
-function gameLoop() {
-  ctx.clearRect(0,0,400,300);
-  drawBalls();
-  requestAnimationFrame(gameLoop);
-}
-
-newRound();
-gameLoop();
+createGrid();
 </script>
 
 </body>
